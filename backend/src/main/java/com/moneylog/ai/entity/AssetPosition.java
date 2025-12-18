@@ -32,8 +32,8 @@ public class AssetPosition {
     @Column(nullable = false)
     private Double totalGain; // Total cumulative gain
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "portfolio_id", nullable = false)
-    private Portfolio portfolio;
-}
+    @Column(nullable = false, length = 7)
+    private String month; // YYYY-MM format
+    
 
+}

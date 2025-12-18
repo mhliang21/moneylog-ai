@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { AssetPosition, CATEGORY_LABELS, AssetCategory } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
@@ -6,6 +5,9 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 interface ReportViewProps {
   date: string;
   positions: AssetPosition[];
+  aiSummary?: string;
+  onGenerateSummary?: () => void;
+  isGeneratingAi?: boolean;
 }
 
 interface CategoryStat {
@@ -16,18 +18,17 @@ interface CategoryStat {
   count: number;
 }
 
-// Define gradients for each category - Softer, more pastel modern palette
+// Update gradients to match backend categories
 const CATEGORY_GRADIENTS: Record<AssetCategory, { start: string, end: string, id: string }> = {
-  'AH_Fund': { start: '#e9d5ff', end: '#a855f7', id: 'grad_ah' },     // Purple
-  'Stock': { start: '#fca5a5', end: '#ef4444', id: 'grad_stock' },    // Red/Rose for Stocks
-  'US_Fund': { start: '#fbcfe8', end: '#ec4899', id: 'grad_us' },     // Pink
+  'AH_Stock': { start: '#e9d5ff', end: '#a855f7', id: 'grad_ah' },     // Purple
+  'US_Stock': { start: '#fbcfe8', end: '#ec4899', id: 'grad_us' },     // Pink
   'Commodity': { start: '#fde68a', end: '#d97706', id: 'grad_comm' }, // Amber
   'Bond': { start: '#bfdbfe', end: '#3b82f6', id: 'grad_bond' },      // Blue
   'Wealth': { start: '#ddd6fe', end: '#7c3aed', id: 'grad_wealth' },  // Violet
   'Cash': { start: '#e5e7eb', end: '#9ca3af', id: 'grad_cash' },      // Gray
 };
 
-const ReportView: React.FC<ReportViewProps> = ({ date, positions }) => {
+const ReportView: React.FC<ReportViewProps> = ({ date, positions, aiSummary, onGenerateSummary, isGeneratingAi }) => {
   // --- Calculations ---
   const totalAmount = positions.reduce((acc, curr) => acc + curr.amount, 0);
   const totalMonthlyGain = positions.reduce((acc, curr) => acc + curr.monthlyGain, 0);
@@ -68,7 +69,7 @@ const ReportView: React.FC<ReportViewProps> = ({ date, positions }) => {
   const pieData = (Object.entries(categoryStats) as [string, CategoryStat][])
     .filter(([_, data]) => data.amount > 0)
     .map(([key, data]) => ({
-      name: CATEGORY_LABELS[key as AssetCategory].split('基金')[0], // Shorten names for chart
+      name: CATEGORY_LABELS[key as AssetCategory],
       value: data.amount,
       categoryKey: key
     }));
@@ -84,7 +85,8 @@ const ReportView: React.FC<ReportViewProps> = ({ date, positions }) => {
   // Format Helpers
   const formatDate = (dateStr: string) => {
     if (!dateStr) return { monthStr: '--', yearStr: '--' };
-    const parts = dateStr.split('-');
+    // Handle both formats: "YYYY-MM" and "YYYY-MM-DD"
+    const parts = dateStr.substring(0, 7).split('-');
     if (parts.length < 2) return { monthStr: '--', yearStr: '--' };
     
     const year = parts[0];
@@ -316,27 +318,27 @@ const ReportView: React.FC<ReportViewProps> = ({ date, positions }) => {
                                             return (
                                                 <tr key={item.id} className={`${!isLast ? 'border-b border-gray-50' : ''} hover:bg-piggy-50/30 transition-colors`}>
                                                     {/* Product Name */}
-                                                    <td className="py-3 pl-3 pr-1 text-gray-700 text-sm font-bold w-[33%]">
+                                                    <td className="py-3 pl-3 pr-1 text-gray-700 text-sm font-bold" style={{width: '35%'}}>
                                                         {item.name}
                                                     </td>
                                                     
                                                     {/* Amount */}
-                                                    <td className="py-3 px-1 text-right font-mono text-base font-bold text-gray-600 w-[16%]">
+                                                    <td className="py-3 px-1 text-right font-mono text-base font-bold text-gray-600" style={{width: '20%'}}>
                                                         {formatMoney(item.amount)}
                                                     </td>
 
                                                     {/* Monthly Gain */}
-                                                    <td className={`py-3 px-1 text-right font-mono text-base font-bold w-[16%] ${item.monthlyGain >= 0 ? 'text-piggy-500' : 'text-green-600'}`}>
+                                                    <td className={`py-3 px-1 text-right font-mono text-base font-bold ${item.monthlyGain >= 0 ? 'text-piggy-500' : 'text-green-600'}`} style={{width: '15%'}}>
                                                         {item.monthlyGain > 0 ? '+' : ''}{item.monthlyGain === 0 ? '-' : formatMoney(item.monthlyGain)}
                                                     </td>
 
                                                     {/* Monthly Yield */}
-                                                    <td className={`py-3 px-1 text-right font-mono text-base font-bold w-[16%] ${itemMonthlyYield >= 0 ? 'text-piggy-500' : 'text-green-600'}`}>
+                                                    <td className={`py-3 px-1 text-right font-mono text-base font-bold ${itemMonthlyYield >= 0 ? 'text-piggy-500' : 'text-green-600'}`} style={{width: '15%'}}>
                                                         {formatPct(itemMonthlyYield)}
                                                     </td>
 
                                                     {/* Cumulative Gain/Yield */}
-                                                    <td className="py-3 px-1 text-center w-[19%]">
+                                                    <td className="py-3 px-1 text-center" style={{width: '15%'}}>
                                                          <div className="flex flex-col items-center leading-none">
                                                              <span className={`text-base font-mono font-bold ${item.totalGain >= 0 ? 'text-piggy-500' : 'text-green-600'}`}>
                                                                  {item.totalGain > 0 ? '+' : ''}{formatMoney(item.totalGain)}

@@ -1,35 +1,47 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import { HistoryRecord } from '../types';
-
-const generateMockHistory = (): HistoryRecord[] => {
-  const data: HistoryRecord[] = [];
-  const baseAmount = 900000;
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(currentYear, currentDate.getMonth() - 11 + i, 1);
-    const year = d.getFullYear();
-    const month = d.getMonth() + 1;
-    const dateStr = `${year}-${month.toString().padStart(2, '0')}`;
-    
-    const randomFluctuation = (Math.random() - 0.4) * 30000;
-    const gain = (Math.random() - 0.3) * 15000;
-    const prevAmount = data.length > 0 ? data[data.length - 1].totalAssets : baseAmount;
-    
-    data.push({
-      month: dateStr,
-      totalAssets: Math.round(prevAmount + gain + 5000),
-      totalGain: Math.round(gain),
-    });
-  }
-  return data;
-};
-
-const MOCK_DATA = generateMockHistory();
+import { getHistory } from '../services/apiService';
 
 const HistoryView: React.FC = () => {
+  const [historyData, setHistoryData] = useState<HistoryRecord[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        setLoading(true);
+        const data = await getHistory();
+        setHistoryData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch history:', err);
+        setError('获取历史数据失败');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHistory();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="max-w-[800px] mx-auto bg-white rounded-[32px] shadow-xl border border-white ring-1 ring-gray-100 p-8">
+        <div className="text-center py-8 text-gray-500">加载中...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-[800px] mx-auto bg-white rounded-[32px] shadow-xl border border-white ring-1 ring-gray-100 p-8">
+        <div className="text-center py-8 text-red-500">{error}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-[800px] mx-auto bg-white rounded-[32px] shadow-xl border border-white ring-1 ring-gray-100 p-8">
       <div className="flex items-center gap-3 mb-10">
@@ -39,11 +51,11 @@ const HistoryView: React.FC = () => {
 
       <div className="mb-12">
         <h3 className="text-sm font-bold text-gray-500 mb-6 flex items-center gap-2 uppercase tracking-wider">
-          <span className="bg-piggy-100 p-1 rounded text-piggy-500">📈</span> 总资产变化 (近12个月)
+          <span className="bg-piggy-100 p-1 rounded text-piggy-500">📈</span> 总资产变化 (近{historyData.length}个月)
         </h3>
         <div className="h-[300px] w-full bg-gradient-to-b from-piggy-50/50 to-white rounded-2xl p-4 border border-piggy-50">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={MOCK_DATA} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <AreaChart data={historyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorAssets" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#f43f78" stopOpacity={0.2}/>
@@ -93,7 +105,7 @@ const HistoryView: React.FC = () => {
         </h3>
         <div className="h-[250px] w-full bg-white rounded-2xl p-4 border border-gray-100 shadow-inner">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={MOCK_DATA} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <BarChart data={historyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
               <XAxis 
                 dataKey="month" 
@@ -119,7 +131,7 @@ const HistoryView: React.FC = () => {
                 formatter={(val: number) => [`¥${val.toLocaleString()}`, '当月收益']}
               />
               <Bar dataKey="totalGain" radius={[4, 4, 0, 0]}>
-                {MOCK_DATA.map((entry, index) => (
+                {historyData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.totalGain >= 0 ? '#fb719a' : '#4ade80'} />
                 ))}
               </Bar>
@@ -132,5 +144,3 @@ const HistoryView: React.FC = () => {
 };
 
 export default HistoryView;
-
-

@@ -6,9 +6,10 @@ import HistoryView from './components/HistoryView';
 import { 
   getPortfolio, 
   savePortfolio, 
-  generateAiSummary 
+  getHistory,
+  generateAiSummary
 } from './services/apiService';
-import { Sparkles, LayoutDashboard, History, PenTool, Wallet } from 'lucide-react';
+import { LayoutDashboard, History, PenTool, Wallet } from 'lucide-react';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'edit' | 'view' | 'history'>('view');
@@ -53,11 +54,14 @@ function App() {
 
   const handleSavePortfolio = async () => {
     try {
-      await savePortfolio({
+      const savedPortfolio = await savePortfolio({
         date,
         positions,
         aiSummary,
       });
+      // Update state with saved data
+      setPositions(savedPortfolio.positions);
+      setAiSummary(savedPortfolio.aiSummary || '');
     } catch (error) {
       console.error('Failed to save portfolio:', error);
       alert('保存失败，请重试');
@@ -67,11 +71,14 @@ function App() {
   const handleUpdatePositions = async (newPositions: AssetPosition[]) => {
     setPositions(newPositions);
     try {
-      await savePortfolio({
+      const savedPortfolio = await savePortfolio({
         date,
         positions: newPositions,
         aiSummary,
       });
+      // Update with saved data
+      setPositions(savedPortfolio.positions);
+      setAiSummary(savedPortfolio.aiSummary || '');
     } catch (error) {
       console.error('Failed to auto-save:', error);
     }
@@ -82,11 +89,14 @@ function App() {
     try {
       const summary = await generateAiSummary(date);
       setAiSummary(summary);
-      await savePortfolio({
+      const savedPortfolio = await savePortfolio({
         date,
         positions,
         aiSummary: summary,
       });
+      // Update with saved data
+      setPositions(savedPortfolio.positions);
+      setAiSummary(savedPortfolio.aiSummary || '');
     } catch (error) {
       console.error('Failed to generate summary:', error);
       alert('生成 AI 摘要失败，请重试');
@@ -143,28 +153,6 @@ function App() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'view' && (
-          <div className="flex justify-end mb-8 max-w-[800px] mx-auto">
-            <button
-              onClick={handleGenerateSummary}
-              disabled={isGeneratingAi}
-              className="group flex items-center gap-2 bg-white text-gray-600 hover:text-piggy-600 border border-gray-200 hover:border-piggy-200 px-6 py-2.5 rounded-full shadow-sm hover:shadow-lg hover:shadow-piggy-100 transition-all disabled:opacity-50"
-            >
-              <Sparkles
-                size={16}
-                className={
-                  isGeneratingAi
-                    ? 'animate-spin text-piggy-400'
-                    : 'text-yellow-400 group-hover:scale-110 transition-transform'
-                }
-              />
-              <span className="font-medium text-sm">
-                {isGeneratingAi ? '小猪正在思考...' : 'AI 智能点评'}
-              </span>
-            </button>
-          </div>
-        )}
-
         <div className="transition-all duration-500 ease-in-out">
           {activeTab === 'edit' && (
             <div className="max-w-4xl mx-auto animate-fade-in-up">
@@ -190,6 +178,8 @@ function App() {
                   date={date} 
                   positions={positions} 
                   aiSummary={aiSummary}
+                  onGenerateSummary={handleGenerateSummary}
+                  isGeneratingAi={isGeneratingAi}
                 />
               )}
             </div>
@@ -217,5 +207,3 @@ function App() {
 }
 
 export default App;
-
-

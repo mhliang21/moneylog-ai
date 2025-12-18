@@ -38,5 +38,3 @@ export const CATEGORY_COLORS: Record<AssetCategory, string> = {
   Wealth: '#a78bfa',
   Cash: '#9ca3af',
 };
-
-
