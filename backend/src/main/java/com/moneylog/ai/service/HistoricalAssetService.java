@@ -32,7 +32,7 @@ public class HistoricalAssetService {
     public HistoricalAssetRecordDTO saveRecord(String month, HistoricalAssetRecordDTO dto) {
         HistoricalAssetRecord record = new HistoricalAssetRecord();
         record.setMonth(month);
-        record.setAssetName(dto.getAssetName());
+        record.setAssetName(dto.getName());
         record.setCategory(dto.getCategory());
         record.setAmount(dto.getAmount());
         record.setMonthlyGain(dto.getMonthlyGain());
@@ -47,7 +47,7 @@ public class HistoricalAssetService {
         HistoricalAssetRecord record = historicalAssetRecordRepository.findById(recordId)
                 .orElseThrow(() -> new RuntimeException("Record not found for month: " + month + " and id: " + recordId));
 
-        record.setAssetName(dto.getAssetName());
+        record.setAssetName(dto.getName());
         record.setCategory(dto.getCategory());
         record.setAmount(dto.getAmount());
         record.setMonthlyGain(dto.getMonthlyGain());

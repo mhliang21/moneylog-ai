@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+/// <reference types="vite/client" />
+const API_BASE_URL = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8080/api';
 
 export interface AssetPosition {
   id?: string;
@@ -36,7 +37,7 @@ export const getPortfolio = async (date: string): Promise<Portfolio> => {
     // Convert backend IDs to strings
     const positions: AssetPosition[] = positionsArray.map((p: any) => ({
       id: p.id?.toString() || Date.now().toString() + Math.random().toString(),
-      name: p.assetName || p.name || '',
+      name: p.name || p.assetName || '',
       category: p.category || 'Cash',
       amount: p.amount || 0,
       monthlyGain: p.monthlyGain || 0,
@@ -86,7 +87,7 @@ export const addPosition = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        assetName: position.name,
+        name: position.name,
         category: position.category,
         amount: position.amount,
         monthlyGain: position.monthlyGain,
@@ -101,7 +102,7 @@ export const addPosition = async (
     const data = await response.json();
     return {
       id: data.id?.toString() || Date.now().toString(),
-      name: data.assetName || data.name,
+      name: data.name || data.assetName,
       category: data.category,
       amount: data.amount,
       monthlyGain: data.monthlyGain,
@@ -125,7 +126,7 @@ export const updatePosition = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        assetName: position.name,
+        name: position.name,
         category: position.category,
         amount: position.amount,
         monthlyGain: position.monthlyGain,
@@ -140,7 +141,7 @@ export const updatePosition = async (
     const data = await response.json();
     return {
       id: data.id?.toString() || positionId,
-      name: data.assetName || data.name,
+      name: data.name || data.assetName,
       category: data.category,
       amount: data.amount,
       monthlyGain: data.monthlyGain,

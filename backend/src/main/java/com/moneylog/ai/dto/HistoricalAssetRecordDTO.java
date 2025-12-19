@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 public class HistoricalAssetRecordDTO {
     private Long id;
     private String month;
-    private String assetName;
+    private String name;
     private AssetCategory category;
     private Double amount;
     private Double monthlyGain;
